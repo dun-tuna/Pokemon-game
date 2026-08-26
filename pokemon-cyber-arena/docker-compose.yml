@@ -1,0 +1,16 @@
+services:
+  arena:
+    build: .
+    restart: unless-stopped
+    init: true
+    ports:
+      - "${PORT:-15001}:80"
+    environment:
+      FINAL_FLAG: "SRC{W33lc0m3_t0_SRC_h4ck3r!!}"
+    read_only: true
+    tmpfs:
+      - /tmp:rw,nosuid,nodev,noexec,size=64m,mode=1777
+      - /var/run/apache2:rw,nosuid,nodev,noexec,size=8m,mode=755
+      - /var/lock/apache2:rw,nosuid,nodev,noexec,size=8m,mode=755
+    security_opt:
+      - no-new-privileges:true
