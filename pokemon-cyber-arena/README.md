@@ -1,14 +1,14 @@
-# Cybermon: Glitch Arena
+# Cybermon: Pokemon Arena
 
-Game ba màn dành cho gian hàng CLB An toàn thông tin. Game giữ lại kiểu chơi map/canvas của bản gốc: người chơi phải tự đi bằng phím mũi tên, chạm hotspot để gặp đối thủ, sau đó battle một đòn theo damage. Vị trí quái thường được xáo trộn ở mỗi lượt chơi; boss vẫn cố định.
+Game ba màn dành cho gian hàng CLB SRC. Game giữ lại kiểu chơi map/canvas của bản gốc: người chơi phải tự đi bằng phím mũi tên, chạm hotspot để gặp đối thủ, sau đó battle một đòn theo damage. Vị trí quái thường được xáo trộn ở mỗi lượt chơi; boss vẫn cố định.
 
 ## Cấu trúc ba màn
 
 | Màn | Độ khó | Cách chơi | Điều kiện qua màn |
 | --- | --- | --- | --- |
 | 1 — Đồng Cỏ Khởi Động | Easy | Dùng ↑ ↓ ← → tìm 4 Wild Pikachu | Damage của bạn lớn hơn đối thủ trong cả 4 trận |
-| 2 — Gym Khiên Hệ | Medium | Tự đi tới 1 trong 7 hotspot và đọc type, damage, debuff | Chọn đối thủ có type yếu hơn starter để thắng và qua màn; cùng hệ phải thắng damage nhưng chưa qua, còn hệ counter sẽ làm thua |
-| 3 — Glitch Core | Hack | Đi tới NullByte Ω rồi chỉnh file Save/Load | Sửa trường `damage` lớn hơn `99.999` để vượt boss |
+| 2 — Counter | Medium | Tự đi tới 1 trong 7 hotspot và đọc type, damage, debuff | Chọn đối thủ có type yếu hơn starter để thắng và qua màn; cùng hệ phải thắng damage nhưng chưa qua, còn hệ counter sẽ làm thua |
+| 3 — Bosss | Hard | Đi tới NullByte Ω rồi chỉnh file Save/Load | Sửa trường `damage` lớn hơn `99.999` để vượt boss |
 
 Sau mỗi màn có màn hình **Chúc mừng!** và nút sang màn tiếp theo. Nút này tự nhận focus để người chơi bấm **Enter/Space**. Khi thua ở bất kỳ màn nào, game hiển thị banner lý do và nút **Thử lại từ Màn 1**; chỉ sau khi xác nhận mới quay về bản đồ. Sau khi thắng màn 3, victory flag mới xuất hiện.
 
@@ -54,7 +54,7 @@ Sửa `.env` trước khi build/chạy:
 
 ```dotenv
 PORT=15001
-FINAL_FLAG=CLB_ATTT{MA_CHIEN_THANG_CUA_SU_KIEN}
+FINAL_FLAG=SRC{W33lc0m3_t0_SRC_h4ck3r!!}
 ```
 
 Sau đó áp dụng lại:
