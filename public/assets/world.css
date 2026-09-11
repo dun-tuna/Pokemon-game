@@ -1,10 +1,17 @@
-/* Local pixel font: Vietnamese glyphs and fixed-width numerals. */
 @font-face {
-    font-family: "VT323";
+    font-family: "Pixelify Sans";
     font-style: normal;
     font-weight: 400;
     font-display: swap;
-    src: url("/assets/fonts/vt323-regular.woff") format("woff");
+    src: url("/assets/fonts/pixelify-sans-regular.ttf") format("truetype");
+}
+
+@font-face {
+    font-family: "Pixelify Sans";
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url("/assets/fonts/pixelify-sans-bold.ttf") format("truetype");
 }
 
 :root {
@@ -41,13 +48,10 @@ body {
         repeating-linear-gradient(0deg, rgba(97, 230, 225, .035) 0 2px, transparent 2px 4px),
         repeating-linear-gradient(90deg, rgba(255, 255, 255, .018) 0 1px, transparent 1px 8px),
         #06131f;
-    font-family: "VT323", "Courier New", ui-monospace, monospace;
+    font-family: "Pixelify Sans", "Courier New", ui-monospace, monospace;
     font-synthesis: none;
-    font-size: 24px;
-    line-height: 1.4;
-    font-variant-numeric: tabular-nums;
     text-rendering: geometricPrecision;
-    -webkit-font-smoothing: auto;
+    -webkit-font-smoothing: none;
 }
 
 body::before {
@@ -104,17 +108,17 @@ button:focus-visible, input:focus-visible {
 .club-mark strong, .club-mark small { display: block; }
 .club-mark strong {
     color: #fff;
-    font-size: 1.375rem;
-    font-weight: 400;
-    letter-spacing: 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: .09em;
     text-shadow: 2px 2px 0 #164257;
 }
 
 .club-mark small {
     margin-top: 4px;
     color: var(--cyan);
-    font-size: 1.25rem;
-    letter-spacing: 0;
+    font-size: .68rem;
+    letter-spacing: .05em;
 }
 
 .club-shield {
@@ -126,8 +130,8 @@ button:focus-visible, input:focus-visible {
     border: 3px solid #0a2635;
     background: var(--cyan);
     box-shadow: 3px 3px 0 rgba(0, 0, 0, .55);
-    font-size: 2rem;
-    font-weight: 400;
+    font-size: 1.6rem;
+    font-weight: 700;
     clip-path: polygon(50% 0, 93% 18%, 84% 76%, 50% 100%, 16% 76%, 7% 18%);
 }
 
@@ -143,9 +147,9 @@ button:focus-visible, input:focus-visible {
     padding: 8px 12px;
     border: 3px solid var(--line);
     cursor: pointer;
-    font-size: 1.25rem;
-    font-weight: 400;
-    letter-spacing: 0;
+    font-size: .76rem;
+    font-weight: 700;
+    letter-spacing: .03em;
     line-height: 1.15;
     text-transform: uppercase;
     transition: transform .08s steps(1), border-color .08s steps(1), background .08s steps(1), box-shadow .08s steps(1);
@@ -230,24 +234,24 @@ button:disabled {
 
 .stage-track li > span {
     color: currentColor;
-    font-size: 2.0625rem;
-    font-weight: 400;
+    font-size: 1.65rem;
+    font-weight: 700;
     line-height: 1;
 }
 
 .stage-track b, .stage-track small { display: block; }
 .stage-track b {
     color: currentColor;
-    font-size: 1.25rem;
-    font-weight: 400;
-    letter-spacing: 0;
+    font-size: .86rem;
+    font-weight: 700;
+    letter-spacing: .05em;
     text-transform: uppercase;
 }
 
 .stage-track small {
     margin-top: 3px;
-    font-size: 1.25rem;
-    letter-spacing: 0;
+    font-size: .7rem;
+    letter-spacing: .06em;
     text-transform: uppercase;
 }
 
@@ -267,7 +271,7 @@ button:disabled {
 .stage-track li.done > span::after {
     content: "✓";
     margin-left: 6px;
-    font-size: 1.25rem;
+    font-size: .78rem;
 }
 
 .stage-track li.locked {
@@ -302,9 +306,9 @@ button:disabled {
 .arena-heading h1 {
     margin: 10px 0 8px;
     color: #fff;
-    font-size: clamp(1.9375rem, 2.5vw, 3.0625rem);
-    font-weight: 400;
-    letter-spacing: 0;
+    font-size: clamp(1.55rem, 2.5vw, 2.45rem);
+    font-weight: 700;
+    letter-spacing: .025em;
     line-height: 1.05;
     text-shadow: 4px 4px 0 #173b50;
 }
@@ -314,16 +318,16 @@ button:disabled {
     margin: 0;
     color: var(--muted);
     font-family: inherit;
-    font-size: 1.25rem;
+    font-size: .94rem;
     line-height: 1.45;
 }
 
 .level-badge, .eyebrow {
     display: inline-block;
     color: var(--cyan);
-    font-size: 1.25rem;
-    font-weight: 400;
-    letter-spacing: 0;
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .1em;
     line-height: 1.1;
     text-transform: uppercase;
 }
@@ -384,9 +388,9 @@ button:disabled {
     border: 3px solid #07323a;
     background: var(--cyan);
     box-shadow: var(--small-shadow);
-    font-size: 1.25rem;
-    font-weight: 400;
-    letter-spacing: 0;
+    font-size: .78rem;
+    font-weight: 700;
+    letter-spacing: .04em;
 }
 
 .map-prompt {
@@ -401,7 +405,7 @@ button:disabled {
     background: #06131e;
     box-shadow: var(--small-shadow);
     font-family: inherit;
-    font-size: 1.25rem;
+    font-size: .82rem;
     text-align: center;
 }
 
@@ -427,9 +431,9 @@ button:disabled {
     display: block;
     margin-top: 8px;
     color: var(--yellow);
-    font-size: clamp(1.25rem, 1.4vw, 1.3125rem);
-    font-weight: 400;
-    letter-spacing: 0;
+    font-size: clamp(.78rem, 1.4vw, 1.05rem);
+    font-weight: 700;
+    letter-spacing: .02em;
 }
 
 .combatants {
@@ -464,8 +468,8 @@ button:disabled {
 .combatant-name {
     overflow: hidden;
     color: #e9f9ff;
-    font-size: 1.25rem;
-    font-weight: 400;
+    font-size: .88rem;
+    font-weight: 700;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
@@ -479,13 +483,13 @@ button:disabled {
     padding-top: 8px;
     border-top: 2px solid rgba(97, 230, 225, .16);
     color: var(--muted);
-    font-size: 1.25rem;
+    font-size: .72rem;
 }
 
 .stat-row b {
     color: var(--cyan);
-    font-size: 1.25rem;
-    font-weight: 400;
+    font-size: .9rem;
+    font-weight: 700;
 }
 
 .enemy-combatant .stat-row b { color: var(--red); }
@@ -497,8 +501,8 @@ button:disabled {
     border: 3px solid #6e5410;
     background: var(--yellow);
     box-shadow: var(--small-shadow);
-    font-size: 1.9375rem;
-    font-weight: 400;
+    font-size: 1.55rem;
+    font-weight: 700;
 }
 
 .battle-result {
@@ -578,9 +582,9 @@ button:disabled {
     max-width: 780px;
     margin: 14px 0 8px;
     color: #fff;
-    font-size: clamp(2.5rem, 5vw, 5rem);
-    font-weight: 400;
-    letter-spacing: 0;
+    font-size: clamp(2rem, 5vw, 4rem);
+    font-weight: 700;
+    letter-spacing: .025em;
     line-height: 1;
     text-shadow: 5px 5px 0 #17384d;
 }
@@ -637,9 +641,9 @@ button:disabled {
 
 .flag-box span {
     color: var(--green);
-    font-size: 1.25rem;
-    font-weight: 400;
-    letter-spacing: 0;
+    font-size: .74rem;
+    font-weight: 700;
+    letter-spacing: .1em;
 }
 
 .flag-box code {
@@ -649,8 +653,8 @@ button:disabled {
     color: #07160d;
     background: var(--green);
     font-family: inherit;
-    font-size: 1.25rem;
-    font-weight: 400;
+    font-size: .95rem;
+    font-weight: 700;
 }
 
 .command-panel {
@@ -680,14 +684,14 @@ button:disabled {
 .trainer-card small {
     margin-bottom: 5px;
     color: var(--muted);
-    font-size: 1.25rem;
-    letter-spacing: 0;
+    font-size: .68rem;
+    letter-spacing: .05em;
 }
 
 .trainer-card strong {
     overflow: hidden;
     color: #fff;
-    font-weight: 400;
+    font-weight: 700;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
@@ -697,7 +701,7 @@ button:disabled {
     gap: 5px;
     justify-items: end;
     color: var(--green);
-    font-size: 1.25rem;
+    font-size: .68rem;
     text-align: right;
 }
 
@@ -713,14 +717,14 @@ button:disabled {
     margin: 9px 0 7px;
     color: #b8c9d5;
     font-family: inherit;
-    font-size: 1.25rem;
+    font-size: .94rem;
     line-height: 1.45;
 }
 
 .progress-text {
     color: var(--yellow);
-    font-size: 1.25rem;
-    font-weight: 400;
+    font-size: .76rem;
+    font-weight: 700;
 }
 
 .action-area {
@@ -733,7 +737,7 @@ button:disabled {
     margin: 0;
     color: #c4d4df;
     font-family: inherit;
-    font-size: 1.25rem;
+    font-size: .86rem;
     line-height: 1.5;
 }
 
@@ -743,7 +747,7 @@ button:disabled {
     padding: 9px;
     color: #b5c8d4;
     border: 2px dashed #34556b;
-    font-size: 1.25rem;
+    font-size: .74rem;
     line-height: 1.4;
 }
 
@@ -755,7 +759,7 @@ button:disabled {
     color: #ffafbd;
     border-left: 3px solid var(--red);
     background: rgba(255, 99, 125, .08);
-    font-size: 1.25rem;
+    font-size: .72rem;
     line-height: 1.45;
 }
 
@@ -779,7 +783,7 @@ button:disabled {
     padding-left: 14px;
     color: #7f9aae;
     font-family: inherit;
-    font-size: 1.25rem;
+    font-size: .78rem;
     line-height: 1.4;
 }
 
@@ -820,17 +824,17 @@ button:disabled {
 
 .kicker {
     color: var(--cyan);
-    font-size: 1.25rem;
-    font-weight: 400;
-    letter-spacing: 0;
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .1em;
 }
 
 .start-card h2 {
     margin: 18px 0 12px;
     color: #fff;
-    font-size: clamp(2.75rem, 8vw, 6.25rem);
-    font-weight: 400;
-    letter-spacing: 0;
+    font-size: clamp(2.2rem, 8vw, 5rem);
+    font-weight: 700;
+    letter-spacing: .03em;
     line-height: .88;
     text-shadow: 5px 5px 0 #17384d;
 }
@@ -839,7 +843,7 @@ button:disabled {
     color: var(--cyan);
     font-style: normal;
     font-size: .58em;
-    letter-spacing: 0;
+    letter-spacing: .03em;
 }
 
 .start-card > p {
@@ -858,9 +862,9 @@ button:disabled {
 
 .start-card label, .start-card legend {
     color: #bcd2df;
-    font-size: 1.25rem;
-    font-weight: 400;
-    letter-spacing: 0;
+    font-size: .76rem;
+    font-weight: 700;
+    letter-spacing: .08em;
     text-transform: uppercase;
 }
 
@@ -911,8 +915,8 @@ button:disabled {
 
 .starter-option span {
     margin-top: 7px;
-    font-size: 1.25rem;
-    font-weight: 400;
+    font-size: .68rem;
+    font-weight: 700;
     text-align: center;
     text-transform: uppercase;
 }
@@ -934,7 +938,7 @@ button:disabled {
     margin-top: 18px;
     color: #607b8e;
     font-family: inherit;
-    font-size: 1.25rem;
+    font-size: .76rem;
 }
 
 .toast {
@@ -950,8 +954,8 @@ button:disabled {
     background: var(--green);
     box-shadow: var(--small-shadow);
     font-family: inherit;
-    font-size: 1.25rem;
-    font-weight: 400;
+    font-size: .92rem;
+    font-weight: 700;
     opacity: 0;
     pointer-events: none;
     transition: opacity .08s steps(1), transform .08s steps(1);
@@ -995,31 +999,31 @@ noscript {
 
     .club-mark small { display: none; }
     .header-actions { width: 100%; gap: 6px; justify-content: stretch; }
-    .icon-button { flex: 1 1 auto; padding: 8px 6px; font-size: 1.25rem; }
+    .icon-button { flex: 1 1 auto; padding: 8px 6px; font-size: .66rem; }
     .page-shell { width: min(100% - 14px, 1560px); padding-top: 12px; }
     .stage-track { gap: 5px; }
     .stage-track li { min-height: 58px; gap: 5px; padding: 8px; }
-    .stage-track li > span { font-size: 1.375rem; }
-    .stage-track b { font-size: 1.25rem; }
+    .stage-track li > span { font-size: 1.1rem; }
+    .stage-track b { font-size: .64rem; }
     .stage-track small { display: none; }
     .arena-heading { min-height: 0; padding: 18px; }
-    .arena-heading h1 { font-size: 2.0625rem; }
-    .arena-heading p { font-size: 1.25rem; }
+    .arena-heading h1 { font-size: 1.65rem; }
+    .arena-heading p { font-size: .86rem; }
     .world-shell, .map-view { min-height: 420px; }
     .battle-view, .clear-view, .defeat-view { padding: 18px 12px; }
     .battle-view { overflow: auto; }
     .combatants { gap: 6px; }
     .combatant { padding: 9px 6px; }
     .combatant img { height: 110px; }
-    .combatant-name { font-size: 1.25rem; }
-    .stat-row { font-size: 1.25rem; }
-    .stat-row b { font-size: 1.25rem; }
-    .compare-sign { padding: 8px 5px; font-size: 1.25rem; }
+    .combatant-name { font-size: .65rem; }
+    .stat-row { font-size: .58rem; }
+    .stat-row b { font-size: .72rem; }
+    .compare-sign { padding: 8px 5px; font-size: 1rem; }
     .battle-actions { flex-direction: column; }
     .battle-actions button { width: 100%; }
     .starter-grid { gap: 5px; }
     .starter-option img { width: 46px; height: 46px; }
-    .starter-option span { font-size: 1.25rem; }
+    .starter-option span { font-size: .54rem; }
     .start-overlay { padding: 10px; }
     .start-card { padding: 24px 15px; }
 }
@@ -1030,10 +1034,10 @@ noscript {
     .stage-track li { display: grid; align-content: center; justify-items: center; text-align: center; }
     .stage-track li::after { display: none; }
     .stage-track li.active { box-shadow: inset 0 -4px var(--cyan), var(--small-shadow); }
-    .stage-track li > span { font-size: 1.25rem; }
-    .stage-track b { font-size: 1.25rem; }
+    .stage-track li > span { font-size: 1rem; }
+    .stage-track b { font-size: .58rem; }
     .keyboard-hint { right: 10px; bottom: 10px; left: 10px; text-align: center; }
-    .map-prompt { max-width: calc(100% - 20px); font-size: 1.25rem; }
+    .map-prompt { max-width: calc(100% - 20px); font-size: .72rem; }
     .trainer-card { align-items: flex-start; flex-direction: column; }
     .trainer-stats { width: 100%; justify-items: stretch; text-align: left; }
 }
@@ -1044,29 +1048,4 @@ noscript {
         animation-iteration-count: 1 !important;
         transition-duration: .01ms !important;
     }
-}
-
-/* Tactical battles need room for health, intent and all five keyboard actions. */
-.battle-view { overflow-y: auto; }
-.battle-intent { padding: 12px; color: var(--yellow); border: 2px solid var(--yellow); background: #152736; text-align: center; }
-.battle-actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; padding: 8px; }
-.battle-actions button { min-height: 48px; }
-.combatants { margin-top: 14px; }
-.combatant img { height: 130px; }
-.stat-row { flex-wrap: wrap; overflow-wrap: anywhere; }
-@media (max-width: 720px) { .battle-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); } .combatant img { height: 80px; } }
-
-/* Readable combat values, including narrow screens. */
-.scanlines { display: none; }
-.stat-row { font-size: 22px; line-height: 1.4; }
-.stat-row b { font-size: 28px; font-variant-numeric: tabular-nums; }
-.battle-result, .battle-intent { font-size: 24px; line-height: 1.4; }
-button, input { line-height: 1.25; }
-.battle-actions button { white-space: normal; min-height: 52px; }
-.combatant-name { overflow-wrap: anywhere; }
-@media (max-width: 720px) {
-    .stat-row { gap: 4px; font-size: 20px; }
-    .stat-row b { font-size: 24px; }
-    .battle-actions { gap: 8px; }
-    .stage-track b { white-space: normal; }
 }

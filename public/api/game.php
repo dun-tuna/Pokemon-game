@@ -61,7 +61,6 @@ if ($action === 'advance_stage') {
     $_SESSION['game']['defeat_message'] = '';
     $_SESSION['game']['current_enemy'] = null;
     $_SESSION['trainer']->hp = 100;
-    $_SESSION['game']['potions'] = $pending === 2 ? 4 : 0;
 
     if ($pending === 2) {
         $_SESSION['game']['level2']['encounters'] = level_two_encounters(
@@ -82,9 +81,6 @@ if ($action === 'encounter') {
         send_json(['ok' => false, 'message' => 'Bạn đang ở trong một trận battle.', 'state' => game_snapshot()], 409);
     }
 
-    if ($_SESSION['game']['pending_stage'] || $_SESSION['game']['defeat_message'] || $_SESSION['game']['stage'] > 3) {
-        send_json(['ok'=>false, 'message'=>'Hãy xác nhận chuyển cảnh trước.', 'state'=>game_snapshot()], 409);
-    }
     $id = (string) ($data['id'] ?? '');
     $stage = (int) $_SESSION['game']['stage'];
     $key = $stage === 1 ? 'level1' : ($stage === 2 ? 'level2' : 'level3');
@@ -104,17 +100,11 @@ if ($action === 'encounter') {
         send_json(['ok' => false, 'message' => 'Đối thủ này đã biến mất.', 'state' => game_snapshot()], 409);
     }
 
-    if ($found['boss']) {
-        $_SESSION['trainer']->hp = 1;
-        $_SESSION['trainer']->damage = 1;
-        $found['turn'] = 0;
-        $found['intent'] = 'null';
-    }
     $_SESSION['game']['current_enemy'] = $found;
     add_log('Bạn chạm trán ' . $found['name'] . ' [' . strtoupper($found['type']) . '].');
     send_json([
         'ok' => true,
-        'message' => 'Một đối thủ xuất hiện! Quan sát ý đồ trước khi chọn thế.',
+        'message' => 'Một đối thủ xuất hiện! Hãy so sánh damage.',
         'state' => game_snapshot(),
     ]);
 }
@@ -133,85 +123,118 @@ if ($action === 'battle_run') {
 if ($action === 'battle_resolve') {
     require_game();
     $enemy = $_SESSION['game']['current_enemy'];
-    if (!is_array($enemy)) send_json(['ok'=>false, 'message'=>'Chưa gặp đối thủ.', 'state'=>game_snapshot()], 409);
-    $move = (string) ($data['move'] ?? 'strike');
-    if (!in_array($move, ['strike', 'guard', 'break', 'potion'], true)) {
-        send_json(['ok'=>false, 'message'=>'Thế đánh không hợp lệ.', 'state'=>game_snapshot()], 422);
+    if (!is_array($enemy)) {
+        send_json(['ok' => false, 'message' => 'Chưa gặp đối thủ nào.', 'state' => game_snapshot()], 409);
     }
+
     $trainer = $_SESSION['trainer'];
     $stage = (int) $_SESSION['game']['stage'];
+
     if ($enemy['boss']) {
-        // Suppression is re-applied server-side on EVERY turn, including after load.
-        $trainer->hp = $trainer->damage = 1;
-        if ($move === 'guard' && $trainer->technique === 'reflect') {
-            $_SESSION['game']['stage'] = 4;
+        $damage = (int) $trainer->damage;
+
+        if ($damage > (int) $enemy['damage']) {
             $_SESSION['game']['current_enemy'] = null;
-            $_SESSION['game']['clear_message'] = 'Chúc mừng! Bạn đã phá vỡ luật của NullByte và hoàn thành cả 3 màn.';
-            add_log('Đòn hủy diệt bị phản ngược về NullByte.');
-            send_json(['ok'=>true, 'message'=>'NullByte bị chính sức mạnh của mình hạ gục!', 'state'=>game_snapshot()]);
+            $_SESSION['game']['stage'] = 4;
+            $_SESSION['game']['clear_message'] = 'Chúc mừng! Bạn đã hoàn thành cả 3 màn.';
+            add_log('DAMAGE OVERRIDE: ' . $damage . '. NullByte đã bị hạ!');
+            send_json([
+                'ok' => true,
+                'message' => 'Bạn đã vượt qua sức mạnh tuyệt đối của NullByte!',
+                'state' => game_snapshot(),
+            ]);
         }
-        reset_progress_to_stage_one('NullByte triệt tiêu mọi chỉ số về 1. Đòn hủy diệt đã hạ bạn.');
-        send_json(['ok'=>true, 'message'=>'Bạn đã thua trước NullByte.', 'state'=>game_snapshot()]);
+
+        $defeatMessage = 'Bạn đã thua vì sức mạnh chưa đủ để hạ Boss.';
+        reset_progress_to_stage_one($defeatMessage);
+        add_log($defeatMessage);
+        send_json([
+            'ok' => true,
+            'message' => $defeatMessage,
+            'state' => game_snapshot(),
+        ]);
     }
-    $intent = $enemy['intent'];
-    $beats = ['strike'=>'break', 'break'=>'guard', 'guard'=>'strike'];
-    $factor = 1.0;
+
+    $relation = 'normal';
+    $debuff = 0;
     if ($stage === 2) {
-        $factor = $enemy['type'] === advantage_type($trainer->type) ? 1.5
-            : ($enemy['type'] === counter_type($trainer->type) ? 0.65 : 1.0);
-    }
-    $out = 0;
-    $incoming = 0;
-    if ($move === 'potion') {
-        if ($_SESSION['game']['potions'] <= 0) send_json(['ok'=>false, 'message'=>'Đã hết bình hồi phục.', 'state'=>game_snapshot()], 409);
-        $_SESSION['game']['potions']--;
-        $trainer->hp = min(100, $trainer->hp + 45);
-        $incoming = $intent === 'guard' ? 0 : (int) ceil($enemy['damage'] * 0.3 / $factor);
-    } else {
-        $win = $beats[$move] === $intent;
-        $tie = $move === $intent;
-        $out = (int) max(1, floor($trainer->damage * $factor * ($win ? 0.85 : ($tie ? 0.35 : 0.12))));
-        $incoming = (int) ceil($enemy['damage'] / $factor * ($win ? ($stage === 2 ? 0.14 : 0.10) : ($tie ? 0.20 : 0.42)));
-        if ($move === 'guard' && $win) $incoming = 0;
-    }
-    $enemy['hp'] = max(0, $enemy['hp'] - $out);
-    // Winning the exchange ends the fight before the enemy can retaliate.
-    if ($enemy['hp'] > 0) $trainer->hp = max(0, $trainer->hp - $incoming);
-    $message = 'Bạn gây ' . $out . ' damage; nhận ' . ($enemy['hp'] > 0 ? $incoming : 0) . '. HP còn ' . $trainer->hp . '.';
-    add_log($message);
-    if ($trainer->hp <= 0) {
-        reset_progress_to_stage_one('Bạn đã cạn HP: chọn thế sai, bất lợi hệ hoặc hồi phục quá muộn.');
-        send_json(['ok'=>true, 'message'=>'Bạn đã thua trận.', 'state'=>game_snapshot()]);
-    }
-    if ($enemy['hp'] > 0) {
-        $enemy['turn']++;
-        $enemy['intent'] = ['strike', 'guard', 'break'][random_int(0, 2)];
-        if ($stage === 2 && $enemy['elite']) {
-            $enemy['damage'] += 4;
-            $enemy['type'] = ['fire'=>'water', 'water'=>'grass', 'grass'=>'fire'][$enemy['type']];
-            $enemy['image'] = type_profile($enemy['type'])['image'];
+        $playerType = (string) $trainer->type;
+        $enemyType = (string) ($enemy['type'] ?? '');
+        $relation = $enemyType === advantage_type($playerType)
+            ? 'advantage'
+            : ($enemyType === $playerType ? 'same' : 'counter');
+
+        if ($relation === 'counter') {
+            $counterDebuff = (int) ($enemy['debuff'] ?? 0);
+            $defeatMessage = 'Bạn đã thua vì gặp đối thủ counter (debuff -' . $counterDebuff . ' damage).';
+            reset_progress_to_stage_one($defeatMessage);
+            add_log($defeatMessage);
+            send_json([
+                'ok' => true,
+                'message' => $defeatMessage,
+                'state' => game_snapshot(),
+            ]);
         }
-        $_SESSION['game']['current_enemy'] = $enemy;
-        send_json(['ok'=>true, 'message'=>$message, 'state'=>game_snapshot()]);
+
+        // An advantageous type still carries a visible debuff, but the
+        // player's adjusted damage should remain high enough to win.
+        $debuff = $relation === 'advantage' ? (int) ($enemy['debuff'] ?? 0) : 0;
     }
+
+    $trainerDamage = max(0, (int) $trainer->damage - $debuff);
+    $enemyDamage = (int) $enemy['damage'];
+    if ($trainerDamage <= $enemyDamage) {
+        $defeatMessage = $relation === 'same'
+            ? 'Bạn đã thua vì sức mạnh yếu hơn.'
+            : ($stage === 2
+                ? 'Bạn đã thua vì debuff làm damage của mình yếu hơn.'
+                : 'Bạn đã thua vì sức mạnh yếu hơn.');
+        reset_progress_to_stage_one($defeatMessage);
+        add_log($defeatMessage);
+        send_json([
+            'ok' => true,
+            'message' => $defeatMessage,
+            'state' => game_snapshot(),
+        ]);
+    }
+
     $key = $stage === 1 ? 'level1' : 'level2';
     foreach ($_SESSION['game'][$key]['encounters'] as &$candidate) {
-        if ($candidate['id'] === $enemy['id']) $candidate['defeated'] = true;
+        if ($candidate['id'] === $enemy['id']) {
+            $candidate['defeated'] = true;
+            break;
+        }
     }
     unset($candidate);
+
     $_SESSION['game'][$key]['wins']++;
-    if ($stage === 2 && $enemy['elite']) $_SESSION['game']['level2']['advantage_wins']++;
-    $trainer->damage += 3;
-    // Side encounters are optional but reward resource planning.
-    if ($stage === 2 && !$enemy['elite']) $_SESSION['game']['potions']++;
-    $_SESSION['game']['current_enemy'] = null;
-    $cleared = $stage === 1 ? $_SESSION['game']['level1']['wins'] >= 6 : $_SESSION['game']['level2']['advantage_wins'] >= 2;
-    if ($cleared) {
-        $_SESSION['game']['pending_stage'] = $stage + 1;
-        $_SESSION['game']['clear_message'] = 'Chúc mừng! Bạn đã chinh phục Màn ' . $stage . '.';
+    if ($stage === 2 && $relation === 'advantage') {
+        $_SESSION['game']['level2']['advantage_wins']++;
     }
-    add_log('Hạ ' . $enemy['name'] . '! +3 damage. HP được giữ sang trận tiếp theo.');
-    send_json(['ok'=>true, 'message'=>$cleared ? 'Chúc mừng! Màn chơi hoàn thành.' : 'Thắng trận! Hãy chuẩn bị cho đối thủ tiếp theo.', 'state'=>game_snapshot()]);
+    $trainer->damage += 4;
+    $trainer->hp = 100;
+    $_SESSION['game']['current_enemy'] = null;
+    add_log('Bạn thắng trong một đòn! Debuff -' . $debuff . '; damage trainer hiện tại ' . $trainer->damage . '.');
+
+    $cleared = $stage === 1
+        ? $_SESSION['game']['level1']['wins'] >= $_SESSION['game']['level1']['required_wins']
+        : $_SESSION['game']['level2']['advantage_wins'] >= $_SESSION['game']['level2']['required_wins'];
+    if ($cleared) {
+        $nextStage = $stage + 1;
+        $_SESSION['game']['pending_stage'] = $nextStage;
+        $_SESSION['game']['clear_message'] = 'Chúc mừng! Bạn đã hoàn thành Màn ' . $stage . '.';
+        add_log('Màn ' . $stage . ' hoàn thành.');
+        send_json([
+            'ok' => true,
+            'message' => 'Chúc mừng! Màn ' . $stage . ' đã hoàn thành.',
+            'state' => game_snapshot(),
+        ]);
+    }
+
+    $message = $stage === 2 && $relation === 'same'
+        ? 'Bạn thắng trận này, nhưng Màn 2 vẫn chưa hoàn thành.'
+        : 'Thắng! Hãy tiếp tục đi tìm đối thủ tiếp theo.';
+    send_json(['ok' => true, 'message' => $message, 'state' => game_snapshot()]);
 }
 
-send_json(['ok'=>false, 'message'=>'Action không tồn tại.', 'state'=>game_snapshot()], 404);
+send_json(['ok' => false, 'message' => 'Action không tồn tại.', 'state' => game_snapshot()], 404);

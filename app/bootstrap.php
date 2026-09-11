@@ -16,16 +16,6 @@ session_set_cookie_params([
     'samesite' => 'Lax',
 ]);
 session_start();
-if (isset($_SESSION['game'], $_SESSION['trainer']) && ($_SESSION['game']['version'] ?? 0) !== 10) {
-    $previous = $_SESSION['trainer'];
-    if ($previous instanceof Trainer) {
-        $_SESSION['trainer'] = new Trainer((string) $previous->name, (string) $previous->starter);
-        $_SESSION['game'] = create_game_state((string) $previous->starter);
-        add_log('Đã cập nhật luật mới. Lượt chơi bắt đầu lại ở Màn 1.');
-    } else {
-        $_SESSION = [];
-    }
-}
 
 header('Cache-Control: no-store, max-age=0');
 header('X-Content-Type-Options: nosniff');
@@ -136,39 +126,54 @@ function random_encounter_positions(int $count): array
 
 function level_one_encounters(): array
 {
-    $positions = random_encounter_positions(6);
-    $enemies = [];
-    foreach ([42, 48, 54, 60, 66, 72] as $i => $damage) {
-        $e = make_encounter('meadow-' . ($i+1), 'Pikachu ' . ($i+1), 'electric', $damage,
-            'pikachu.png', $positions[$i][0], $positions[$i][1]);
-        $e['hp'] = $e['max_hp'] = 80 + $i * 12;
-        $e['turn'] = 0;
-        $e['intent'] = ['strike', 'guard', 'break'][random_int(0, 2)];
-        $e['elite'] = false;
-        $enemies[] = $e;
-    }
-    return $enemies;
+    $positions = random_encounter_positions(4);
+
+    return [
+        make_encounter('meadow-1', 'Pikachu', 'electric', 36, 'pikachu.png', $positions[0][0], $positions[0][1]),
+        make_encounter('meadow-2', 'Pikachu', 'electric', 42, 'pikachu.png', $positions[1][0], $positions[1][1]),
+        make_encounter('meadow-3', 'Pikachu', 'electric', 48, 'pikachu.png', $positions[2][0], $positions[2][1]),
+        make_encounter('meadow-4', 'Pikachu', 'electric', 54, 'pikachu.png', $positions[3][0], $positions[3][1]),
+    ];
 }
 
 function level_two_encounters(string $starter, int $baseDamage): array
 {
-    $positions = random_encounter_positions(7);
-    $types = ['fire', 'water', 'grass'];
-    $enemies = [];
-    for ($i = 0; $i < 7; $i++) {
-        $type = $types[random_int(0, 2)];
-        $profile = type_profile($type);
-        $elite = $i < 2;
-        $e = make_encounter('gym-' . ($i+1), ($elite ? 'Hộ vệ ' : 'Đấu sĩ ') . ($i+1),
-            $type, $baseDamage + ($elite ? 18 : -12), $profile['image'],
-            $positions[$i][0], $positions[$i][1]);
-        $e['elite'] = $elite;
-        $e['hp'] = $e['max_hp'] = $elite ? 240 : 140;
-        $e['turn'] = 0;
-        $e['intent'] = ['strike', 'guard', 'break'][random_int(0, 2)];
-        $enemies[] = $e;
+    $playerType = Trainer::profile($starter)['type'];
+    $safeType = advantage_type($playerType);
+    $badType = counter_type($playerType);
+    $safe = type_profile($safeType);
+    $same = type_profile($playerType);
+    $bad = type_profile($badType);
+    $definitions = [
+        ['type' => $safeType, 'profile' => $safe, 'damage' => max(15, $baseDamage - 14), 'debuff' => 6],
+        // Keep every advantageous encounter winnable after its debuff. The
+        // adjusted trainer damage remains strictly greater than the enemy.
+        ['type' => $safeType, 'profile' => $safe, 'damage' => max(15, $baseDamage - 13), 'debuff' => 10],
+        ['type' => $playerType, 'profile' => $same, 'damage' => max(15, $baseDamage - 16), 'debuff' => 0],
+        ['type' => $playerType, 'profile' => $same, 'damage' => max(15, $baseDamage - 10), 'debuff' => 0],
+        ['type' => $playerType, 'profile' => $same, 'damage' => $baseDamage + 10, 'debuff' => 0],
+        ['type' => $badType, 'profile' => $bad, 'damage' => $baseDamage + 12, 'debuff' => 25],
+        ['type' => $badType, 'profile' => $bad, 'damage' => $baseDamage + 16, 'debuff' => 30],
+    ];
+
+    shuffle($definitions);
+    $positions = random_encounter_positions(count($definitions));
+    $encounters = [];
+    foreach ($definitions as $index => $definition) {
+        $encounters[] = make_encounter(
+            'gym-' . str_pad((string) ($index + 1), 2, '0', STR_PAD_LEFT),
+            $definition['profile']['name'],
+            $definition['type'],
+            $definition['damage'],
+            $definition['profile']['image'],
+            $positions[$index][0],
+            $positions[$index][1],
+            false,
+            $definition['debuff']
+        );
     }
-    return $enemies;
+
+    return $encounters;
 }
 
 function level_three_encounters(): array
@@ -183,8 +188,6 @@ function create_game_state(string $starter): array
     $profile = Trainer::profile($starter);
 
     return [
-        'version' => 10,
-        'potions' => 3,
         'stage' => 1,
         'pending_stage' => 0,
         'clear_message' => '',
@@ -192,7 +195,7 @@ function create_game_state(string $starter): array
         'current_enemy' => null,
         'level1' => [
             'wins' => 0,
-            'required_wins' => 6,
+            'required_wins' => 4,
             'encounters' => level_one_encounters(),
         ],
         'level2' => [
@@ -204,7 +207,7 @@ function create_game_state(string $starter): array
         'level3' => [
             'encounters' => level_three_encounters(),
         ],
-        'log' => ['Màn 1: hạ 6 đối thủ. Đọc ý đồ, chọn thế và giữ HP; chỉ có 3 bình hồi phục.'],
+        'log' => ['Màn 1 bắt đầu: dùng phím mũi tên để đi tìm 4 Wild Pikachu.'],
     ];
 }
 
@@ -247,7 +250,6 @@ function game_snapshot(): array
 
     $snapshot = [
         'started' => true,
-        'potions' => (int) ($game['potions'] ?? 0),
         'stage' => $stage,
         'pending_stage' => (int) $game['pending_stage'],
         'clear_message' => (string) $game['clear_message'],
@@ -258,7 +260,6 @@ function game_snapshot(): array
             'type' => (string) $trainer->type,
             'hp' => max(0, (int) $trainer->hp),
             'damage' => max(0, (int) $trainer->damage),
-            'technique' => (string) $trainer->technique,
         ],
         'current_enemy' => public_encounter($game['current_enemy']),
         'level1' => [

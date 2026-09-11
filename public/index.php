@@ -10,9 +10,8 @@ require_once dirname(__DIR__) . '/app/bootstrap.php';
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#08131f">
     <title>Cybermon: POKEMON ARENA</title>
-    <link rel="preload" href="/assets/fonts/vt323-regular.woff" as="font" type="font/woff" crossorigin>
-    <link rel="stylesheet" href="/assets/world.css?v=11-font">
-    <script src="/assets/game.js?v=11-font" defer></script>
+    <link rel="stylesheet" href="/assets/world.css?v=9">
+    <script src="/assets/game.js?v=9" defer></script>
 </head>
 <body>
     <div class="scanlines" aria-hidden="true"></div>
@@ -36,18 +35,18 @@ require_once dirname(__DIR__) . '/app/bootstrap.php';
 
     <main class="page-shell">
         <ol id="stageTrack" class="stage-track" aria-label="Tiến trình ba màn">
-            <li data-stage="1"><span>01</span><div><b>Khởi động</b><small>TACTICS</small></div></li>
-            <li data-stage="2"><span>02</span><div><b>Counter</b><small>ENDURANCE</small></div></li>
-            <li data-stage="3"><span>03</span><div><b>BOSS</b><small>PARADOX</small></div></li>
+            <li data-stage="1"><span>01</span><div><b>Khởi động</b><small>Easy</small></div></li>
+            <li data-stage="2"><span>02</span><div><b>Counter</b><small>Medium</small></div></li>
+            <li data-stage="3"><span>03</span><div><b>BOSS</b><small>Hard</small></div></li>
         </ol>
 
         <section class="game-grid" aria-live="polite">
             <article class="arena-panel">
                 <div class="arena-heading">
                     <div>
-                        <span id="levelBadge" class="level-badge">LEVEL 1 · TACTICS</span>
+                        <span id="levelBadge" class="level-badge">LEVEL 1 · EASY</span>
                         <h1 id="levelTitle">Đồng Cỏ Khởi Động</h1>
-                        <p id="levelStory">Hạ 6 đối thủ bằng chiến thuật và quản lý HP.</p>
+                        <p id="levelStory">Dùng phím mũi tên để đi quanh map và tìm đủ 4 Pikachu.</p>
                     </div>
                 </div>
 
@@ -61,14 +60,12 @@ require_once dirname(__DIR__) . '/app/bootstrap.php';
                     <div id="battleView" class="battle-view" hidden>
                         <div class="battle-banner">
                             <span class="eyebrow">ENCOUNTER</span>
-                            <strong>ĐỌC Ý ĐỒ · CHỌN THẾ · GIỮ HP</strong>
+                            <strong>SO SÁNH DAMAGE — AI LỚN HƠN SẼ THẮNG </strong>
                         </div>
-                        <p id="battleIntent" class="battle-intent"></p>
                         <div class="combatants">
                             <div class="combatant player-combatant">
                                 <img id="battlePlayerSprite" src="/assets/materials/pokemons/charmander.png" alt="Cybermon của người chơi">
                                 <div class="combatant-name" id="battlePlayerName">TRAINER</div>
-                                <div class="stat-row"><span>HP</span><b id="battlePlayerHP">100</b></div>
                                 <div class="stat-row"><span>TYPE</span><b id="battlePlayerType">FIRE</b></div>
                                 <div class="stat-row"><span>DAMAGE</span><b id="battlePlayerDamage">62</b></div>
                             </div>
@@ -76,7 +73,6 @@ require_once dirname(__DIR__) . '/app/bootstrap.php';
                             <div class="combatant enemy-combatant">
                                 <img id="battleEnemySprite" src="/assets/materials/pokemons/pikachu.png" alt="Đối thủ">
                                 <div class="combatant-name" id="battleEnemyName">PIKACHU</div>
-                                <div class="stat-row"><span>HP</span><b id="battleEnemyHP">—</b></div>
                                 <div class="stat-row"><span>TYPE</span><b id="battleEnemyType">ELECTRIC</b></div>
                                 <div class="stat-row"><span>DAMAGE</span><b id="battleEnemyDamage">36</b></div>
                                 <div id="battleEnemyDebuffRow" class="stat-row debuff-row"><span>DEBUFF</span><b id="battleEnemyDebuff">—</b></div>
@@ -84,10 +80,7 @@ require_once dirname(__DIR__) . '/app/bootstrap.php';
                         </div>
                         <p id="battleResult" class="battle-result">Bạn sẵn sàng chưa?</p>
                         <div class="battle-actions">
-                            <button id="fightButton" class="primary-button" type="button" data-game-action="true">⚔ ĐÁNH</button>
-                            <button id="guardButton" class="secondary-button" type="button" data-game-action="true">THỦ</button>
-                            <button id="breakButton" class="secondary-button" type="button" data-game-action="true">PHÁ THỦ</button>
-                            <button id="potionButton" class="secondary-button" type="button" data-game-action="true">HỒI PHỤC</button>
+                            <button id="fightButton" class="primary-button" type="button" data-game-action="true">⚔ ĐÁNH MỘT ĐÒN</button>
                             <button id="runButton" class="secondary-button" type="button" data-game-action="true">↩ CHẠY</button>
                         </div>
                     </div>
@@ -120,7 +113,6 @@ require_once dirname(__DIR__) . '/app/bootstrap.php';
                     </div>
                     <div class="trainer-stats">
                         <span id="sideStarter">—</span>
-                        <span id="sideResources">HP 100 · BÌNH 3</span>
                         <span><b id="sideDamage">—</b> DMG</span>
                     </div>
                 </section>

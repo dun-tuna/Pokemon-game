@@ -1,60 +1,81 @@
-# Ban tổ chức — Cybermon v12
+# Organizer Solution — Cybermon Glitch Arena
 
-Tài liệu này chứa lời giải. Không đưa cho người chơi.
+Tài liệu này dành cho ban tổ chức. Không gửi file source/ZIP hoặc file này cho người chơi nếu muốn giữ bí mật lời giải.
 
-## Thiết kế
+## Intended solve path
 
-Màn 1 dạy đọc ý đồ và quản lý HP. Hạ 6 quái, HP 80–140 và damage 42–72. Màn 2 thử sức bền với hai hộ vệ 240 HP, đổi hệ sau mỗi lượt và tăng 4 damage. Năm đấu sĩ phụ (140 HP) là lựa chọn đánh đổi HP lấy +3 damage / 1 bình. Cả ba starter có đường thắng; không cần may mắn về hệ.
+1. Chọn starter và dùng các phím ↑ ↓ ← → để đi chạm 4 hotspot ở Màn 1. Vị trí các quái thường được xáo trộn sau mỗi lượt chơi.
+2. Trong mỗi encounter, damage của trainer lớn hơn damage Wild Pikachu nên chỉ cần **Đánh một đòn**.
+3. Bấm **Chúc mừng! → Sang màn 2**.
+4. Ở Màn 2 có 7 hotspot được xáo vị trí, gồm type có lợi cho starter, cùng type và type counter starter. Không có nhãn tiết lộ đáp án: người chơi tự đọc type trên hotspot và bảng tương khắc. Đối thủ có type có lợi luôn chịu debuff nhưng vẫn thua một đòn và lập tức mở Màn 3. Đối thủ cùng type chỉ qua được battle nếu damage của trainer lớn hơn; thắng cùng hệ chưa mở màn mới. Đối thủ counter gây debuff và thua ngay. Nút **Chạy** luôn hợp lệ để đổi đối thủ.
+5. Chạm hotspot có lợi, thắng một trận và bấm **Chúc mừng! → Sang màn 3**.
+6. Sang Màn 3, đi tới NullByte Ω và nhấn **Đánh một đòn**. Boss có `99.999` damage nên đòn bình thường không đủ; nếu thất bại, server giữ lý do trong banner, rồi nút **Thử lại** mới đưa người chơi về Màn 1.
+7. Nút **Lưu game** luôn có trên thanh trên. File save là PHP serialized object, trong đó có trường `damage`.
+8. Sửa giá trị `damage` thành một số lớn hơn `99.999`, ví dụ `100000`, rồi nạp lại file.
+9. Quay lại NullByte và nhấn **Đánh một đòn** lần nữa. Damage mới vượt boss và flag xuất hiện.
 
-Đúng thế: gây 85% damage trước hệ, nhận 10% damage địch ở Màn 1 / 14% ở Màn 2. Thủ khắc chế Đánh nhận 0. Hòa: 35% / 20%. Sai: 12% / 42%. Hạ quái kết thúc trận trước khi bị đánh trả. Bình +45 HP, dùng khi địch Thủ không nhận damage; lúc khác nhận 30% damage địch có tính hệ.
+## Tạo payload kiểm thử nhanh
 
-## Puzzle Màn 3: untrusted effect / phản đòn
-
-Boss ép cả HP và damage về 1 khi chạm trán và trước mọi hành động. Sửa damage không thể thắng. Cơ chế mới vẫn dùng PHP deserialize với allowlist chỉ có `Trainer`, không cần đoán tên class hay xem source để giải.
-
-Giải mã Base64 toàn bộ file `.sav` để nhận PHP serialized object. Save có trường `technique` và một danh mục `technique_catalog` gồm `strike / guard / break / reflect`. Người chơi tự đọc dữ liệu save, suy luận hiệu ứng phản đòn và chọn hành động tương ứng. UI không có rescue hint hay đoạn code lời giải. Có thể gợi ý bằng lời theo mức: “Còn gì ngoài sức mạnh?”, “Xem hiệu ứng trong dữ liệu nhân vật”, rồi mới nói về phản đòn nếu cần.
-
-Lời giải:
-
-1. Qua hai màn đầu, lưu game ở Màn 3 (có thể lưu cả khi đang gặp boss).
-2. Giải mã Base64 của file, rồi đổi đúng trường kỹ năng, không sửa checkpoint hoặc seal:
-
-```text
-s:9:"technique";s:6:"strike";
-```
-
-thành:
-
-```text
-s:9:"technique";s:7:"reflect";
-```
-
-3. Mã hóa lại toàn bộ object thành Base64, lưu vào `.sav`. Load lại, gặp boss và chọn **THỦ**. HP / damage vẫn là 1 nhưng đòn hủy diệt bị phản ngược. Server mới chuyển sang màn thắng và trả flag.
-
-Script kiểm chứng:
+Sau khi tải `arena.sav` vào thư mục hiện tại:
 
 ```bash
 python3 - <<'PY'
 from pathlib import Path
-import base64
-source = base64.b64decode(Path('arena.sav').read_bytes(), validate=True)
-old = b's:9:"technique";s:6:"strike";'
-new = b's:9:"technique";s:7:"reflect";'
-assert old in source, 'Không tìm thấy kỹ năng gốc'
-Path('arena-reflect.sav').write_bytes(base64.b64encode(source.replace(old, new, 1)))
+import re
+
+source = Path("arena.sav")
+target = Path("arena-hacked.sav")
+data = source.read_bytes()
+
+pattern = rb'(s:6:"damage";i:)\d+(;)'
+data, count = re.subn(pattern, rb'\g<1>100000\2', data, count=1)
+if count != 1:
+    raise SystemExit("Không tìm thấy trường damage trong serialized Trainer")
+
+target.write_bytes(data)
+print(f"Created {target}")
 PY
 ```
 
-Chỉ đổi catalog không có tác dụng. `reflect` đi cùng Đánh / Phá thủ / Bình vẫn thua. Phải chọn Thủ.
+Upload `arena-hacked.sav`, quay lại NullByte và nhấn **Đánh một đòn**.
 
-## Ranh giới của bài CTF
+## Vì sao đây là PHP object deserialization?
 
-Toàn bộ file là `Base64(serialize(Trainer))`; Base64 là encoding, không phải mã hóa bảo mật. Loader chỉ nhận envelope hợp lệ (cho phép xuống dòng), không nhận object thô.
+Server deserialize dữ liệu do người chơi kiểm soát rồi dùng các thuộc tính trong object để tính damage. Màn 3 cố ý cho phép sửa có giới hạn trường `damage`, nhưng không cho đổi class và không có gadget chain dẫn tới RCE.
 
-`checkpoint` bên trong vẫn là JSON base64 có HMAC-SHA256 (`seal`), lưu toàn bộ state cùng starter/name/HP/damage. Loader phục hồi các dữ liệu đó từ checkpoint được ký, bỏ qua các trường số bên ngoài. `technique` cố ý không thuộc phần ký và được tin cậy khi load — đây là điểm yếu cần khai thác. Checkpoint ký không phải mã hóa; đọc được nhưng không chỉnh được nếu không có key. Không có gadget chạy lệnh, ghi file tùy ý hay deserialize class ngoài Trainer.
+Giới hạn triển khai:
 
-Replay save hợp lệ được cho phép để chơi lại/checkpoint. Old save và checkpoint sửa stage/pending/wins đều bị từ chối. Save sau victory vẫn có thể phục hồi victory vì người chơi đã thực sự thắng trước đó. SAVE_SECRET phải giữ bí mật và ổn định trên deployment; xem README.
+- `unserialize()` chỉ cho phép class `Trainer`.
+- Màn 1/2 kẹp damage theo số trận thắng hợp lệ.
+- Màn 3 cho phép damage tối đa `1.000.000`, đủ để vượt boss nhưng không tạo giá trị vô hạn.
 
-## Kiểm chứng
+## Gợi ý theo từng mức
 
-Đã chạy 12 lượt end-to-end qua CGI PHP 8.3 WebAssembly (4 lượt cho mỗi starter), gồm chiến thuật thắng, boss suppression, damage tampering, đúng kỹ năng phản đòn, checkpoint giả và load giữa trận. Bản test có hơn 700 request. Cần chạy lại `./smoke-test.sh` trên Apache/Docker thật vì runtime thử không thay thế kiểm tra cấu hình triển khai.
+- Hint 1: “Đòn đánh hiện tại chưa đủ mạnh. Hãy để ý damage của Boss.”
+- Hint 2: “Nút Lưu game luôn có trên thanh trên; file save chứa dữ liệu Trainer.”
+- Hint 3: “Tìm trường `damage` trong file save và chỉnh lớn hơn `99.999`.”
+
+## Checklist trước giờ mở cửa
+
+```bash
+cp .env.example .env
+docker compose up --build -d
+docker compose ps
+docker compose logs --tail=50 arena
+./smoke-test.sh
+```
+
+Kiểm tra trên một cửa sổ ẩn danh:
+
+- Màn 1 di chuyển bằng arrow keys và có 4 hotspot.
+- Mỗi trận so damage và kết thúc bằng một đòn.
+- Màn 1 có dòng chúc mừng trước khi sang Màn 2.
+- Màn 2 có 7 đối thủ, không có nhãn “đúng hệ/counter”; kiểm tra đủ nhóm có lợi, cùng hệ và counter. Trận có lợi có debuff nhưng thắng và mở Màn 3; trận cùng hệ chỉ thắng khi damage lớn hơn và không mở màn; trận counter hiển thị banner thất bại. Nút **Chạy** không làm mất lượt.
+- Vị trí Màn 1/2 thay đổi giữa các lượt, còn vị trí boss không đổi.
+- Save tải/nạp được từ Màn 1, Màn 2 và Màn 3.
+- Save gốc không thể hạ NullByte.
+- Thua ở Màn 1, Màn 2 hoặc Màn 3 đều hiển thị banner lý do; nút **Thử lại** có thể kích hoạt bằng Enter/Space và đưa về Màn 1.
+- Save sửa trường damage thành `100000` load thành công và nhận đúng `FINAL_FLAG`.
+- Màn 3 hiển thị flag sau dòng chúc mừng hoàn tất.
+- Nút qua màn nhận focus và hoạt động với Enter/Space.
+- Nút Chơi lại tạo session mới.
