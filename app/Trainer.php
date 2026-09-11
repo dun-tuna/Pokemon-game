@@ -13,6 +13,10 @@ class Trainer
     public $type;
     public $hp;
     public $damage;
+    public $technique = 'strike';
+    public $technique_catalog = 'strike / guard / break / reflect';
+    public $checkpoint = '';
+    public $seal = '';
 
     public function __construct(string $name, string $starter)
     {

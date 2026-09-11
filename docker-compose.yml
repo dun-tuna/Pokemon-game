@@ -7,6 +7,7 @@ services:
       - "${PORT:-15001}:80"
     environment:
       FINAL_FLAG: "SRC{W33lc0m3_t0_SRC_h4ck3r!!}"
+      SAVE_SECRET: "${SAVE_SECRET:-}"
     read_only: true
     tmpfs:
       - /tmp:rw,nosuid,nodev,noexec,size=64m,mode=1777

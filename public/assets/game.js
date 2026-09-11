@@ -5,30 +5,30 @@ const SAVE_URL = '/api/save-load.php';
 
 const stageCopy = {
     1: {
-        badge: 'LEVEL 1 · EASY',
+        badge: 'LEVEL 1 · TACTICS',
         title: 'Đồng Cỏ Khởi Động',
-        story: 'Dùng phím mũi tên để đi quanh map và tìm đủ 4 Wild Pikachu.',
-        mission: 'Chạm các biểu tượng ⚡ trên bản đồ. Trong battle, damage lớn hơn sẽ hạ đối thủ bằng một đòn.',
+        story: 'Sáu đối thủ, HP hữu hạn. Đọc ý đồ và chọn thế trước từng lượt.',
+        mission: 'Hạ đủ 6 Pikachu. HP không tự hồi sau trận; chỉ có 3 bình. Qua màn được hồi đầy.',
         map: '/assets/materials/maps/map1.png',
         width: 736,
         height: 669,
         start: {x: 0.08, y: 0.84},
     },
     2: {
-        badge: 'LEVEL 2 · MEDIUM',
+        badge: 'LEVEL 2 · ENDURANCE',
         title: 'Counter',
-        story: 'Khám phá và quan sát type, damage trước mỗi trận.',
-        mission: 'Tìm đối thủ mà bạn có lợi thế hệ. Cân nhắc debuff và sức mạnh trước khi ra đòn.',
+        story: 'Hai hộ vệ đổi hệ liên tục. Mỗi lượt là một bài toán mới.',
+        mission: 'Hạ cả 2 hộ vệ. Năm đấu sĩ phụ thưởng bình hồi phục và sức mạnh; cân nhắc phần thưởng với lượng HP phải trả.',
         map: '/assets/materials/maps/map2.png',
         width: 783,
         height: 638,
         start: {x: 0.08, y: 0.84},
     },
     3: {
-        badge: 'LEVEL 3 · Hard',
+        badge: 'LEVEL 3 · PARADOX',
         title: 'BOSS',
-        story: 'Boss này có sức mạnh vượt trội so với ngươi, nếu muốn chiến thắng, tìm cách lách qua lỗ hổng và hạ gục boss với sức mạnh tuyệt đối!!!',
-        mission: 'Trở thành 1 hacker và giải quyết boss',
+        story: 'NullByte ép HP và damage của bạn về 1. Sức mạnh thuần túy không còn quyết định chiến thắng.',
+        mission: 'Lợi dụng lỗ hổng và chiến thắng trò chơi.',
         map: '/assets/materials/maps/map3.png',
         width: 805,
         height: 678,
@@ -107,6 +107,8 @@ let playerPosition = {x: 0.1, y: 0.8};
 let busy = false;
 let toastTimer = null;
 let battleFocusIndex = 0;
+const combatButtons = [elements.fightButton, document.querySelector('#guardButton'), document.querySelector('#breakButton'), document.querySelector('#potionButton'), elements.runButton];
+const moveNames = {strike: 'ĐÁNH', guard: 'THỦ', break: 'PHÁ THỦ', null: 'HỦY DIỆT'};
 const imageCache = {};
 
 function formatNumber(value) {
@@ -127,7 +129,7 @@ function focusButton(button) {
 }
 
 function focusBattleAction(index = battleFocusIndex) {
-    const buttons = [elements.fightButton, elements.runButton];
+    const buttons = combatButtons;
     battleFocusIndex = ((index % buttons.length) + buttons.length) % buttons.length;
     focusButton(buttons[battleFocusIndex]);
 }
@@ -176,6 +178,7 @@ async function postAction(action, extra = {}) {
         const payload = await response.json();
         if (payload.state) {
             gameState = payload.state;
+            if (mapStage !== Number(gameState.stage) || gameState.defeat_message) mapStage = 0;
             render();
         }
         showToast(payload.message, !payload.ok);
@@ -233,10 +236,10 @@ function setupMap(stage) {
 }
 
 function drawLabel(ctx, text, x, y, color = '#eaf6ff') {
-    ctx.font = '700 12px "Pixelify Sans", monospace';
+    ctx.font = '400 20px "VT323", monospace';
     const width = ctx.measureText(text).width + 12;
     ctx.fillStyle = 'rgba(4, 13, 22, .86)';
-    ctx.fillRect(x - width / 2, y - 18, width, 19);
+    ctx.fillRect(x - width / 2, y - 24, width, 27);
     ctx.fillStyle = color;
     ctx.textAlign = 'center';
     ctx.fillText(text, x, y - 5);
@@ -245,6 +248,7 @@ function drawLabel(ctx, text, x, y, color = '#eaf6ff') {
 function drawMap() {
     if (!gameState || !mapImage || !mapImage.complete || Number(gameState.stage) > 3) return;
     const ctx = elements.canvas.getContext('2d');
+    ctx.imageSmoothingEnabled = false;
     const width = elements.canvas.width;
     const height = elements.canvas.height;
     ctx.clearRect(0, 0, width, height);
@@ -331,10 +335,10 @@ function renderInstructions(stage) {
     const p = document.createElement('p');
     p.className = 'instruction';
     if (stage === 1) {
-        p.textContent = 'Dùng ↑ ↓ ← → trên bàn phím. Đi tới biểu tượng ⚡ để chạm trán Wild Pikachu.';
+        p.textContent = 'Đánh thắng Phá thủ; Phá thủ thắng Thủ; Thủ thắng Đánh. Chọn thế khắc chế ý đồ đối thủ để giảm sát thương nhận. Hồi phục +45 HP tốn một lượt; dùng khi đối thủ Thủ để an toàn.';
         elements.actionArea.append(p);
     } else if (stage === 2) {
-        p.textContent = 'Dùng phím mũi tên để khám phá Gym. Quan sát type, damage và debuff trước khi chọn đối thủ.';
+        p.textContent = 'Luật thế đánh như Màn 1. Có lợi hệ: sát thương ×1,5; bất lợi: ×0,65. Hộ vệ đổi hệ Fire → Water → Grass và tăng 4 damage mỗi lượt. HP không tự hồi; 4 bình khởi đầu. Bỏ chạy sẽ khởi động lại HP đối thủ khi gặp lại.';
         const wheel = document.createElement('div');
         wheel.className = 'type-wheel';
         wheel.innerHTML = '<span><b>🔥 Fire</b> thắng 🌿 Grass</span><span><b>💧 Water</b> thắng 🔥 Fire</span><span><b>🌿 Grass</b> thắng 💧 Water</span>';
@@ -360,6 +364,10 @@ function renderBattle() {
     elements.battlePlayerName.textContent = trainer.name.toUpperCase();
     elements.battlePlayerType.textContent = trainer.type.toUpperCase();
     elements.battlePlayerDamage.textContent = formatNumber(trainer.damage);
+    document.querySelector('#battlePlayerHP').textContent = `${trainer.hp} / 100`;
+    document.querySelector('#battleEnemyHP').textContent = enemy.boss ? '99.999' : `${enemy.hp} / ${enemy.max_hp}`;
+    document.querySelector('#battleIntent').textContent = `LƯỢT ${(enemy.turn || 0) + 1} · Ý ĐỒ: ${moveNames[enemy.intent] || 'HỦY DIỆT'}${enemy.elite ? ' · HỘ VỆ ĐỔI HỆ' : ''}`;
+    document.querySelector('#potionButton').textContent = `HỒI PHỤC (${gameState.potions})`;
     elements.battleEnemySprite.src = assetPath(enemy);
     elements.battleEnemyName.textContent = enemy.name.toUpperCase();
     elements.battleEnemyType.textContent = enemy.type.toUpperCase();
@@ -368,8 +376,8 @@ function renderBattle() {
     elements.battleEnemyDebuffRow.hidden = debuff === 0;
     elements.battleEnemyDebuff.textContent = debuff ? `-${formatNumber(debuff)} DMG` : '—';
     elements.battleResult.textContent = enemy.boss
-        ? ''
-        : (debuff ? `Đối thủ gây debuff -${debuff} damage trước khi so đòn.` : 'Ai có damage lớn hơn sẽ hạ đối thủ bằng một đòn duy nhất.');
+        ? 'NULL FIELD: HP = 1 · DAMAGE = 1. Một đòn hủy diệt đang được chuẩn bị.'
+        : 'Đánh > Phá thủ > Thủ > Đánh. Hồi phục tốn lượt. ← → chọn · Enter / Space xác nhận.';
     elements.runButton.textContent = '↩ CHẠY';
     focusBattleAction(battleFocusIndex);
 }
@@ -422,13 +430,15 @@ function render() {
     elements.sideTrainerName.textContent = trainer.name;
     elements.sideStarter.textContent = `${trainer.starter.toUpperCase()} · ${trainer.type.toUpperCase()}`;
     elements.sideDamage.textContent = formatNumber(trainer.damage);
+    document.querySelector('#sideResources').textContent = `HP ${trainer.hp} / 100 · BÌNH ${gameState.potions}`;
     renderProgress(stage);
+    renderInstructions(stage);
 
     const levelState = stage === 1 ? gameState.level1 : (stage === 2 ? gameState.level2 : gameState.level3);
     if (stage === 1) {
         elements.progressText.textContent = `WINS: ${levelState.wins} / ${levelState.required_wins}`;
     } else if (stage === 2) {
-        elements.progressText.textContent = `GYM CLEAR: ${levelState.advantage_wins || 0} / ${levelState.required_wins}`;
+        elements.progressText.textContent = `HỘ VỆ: ${levelState.advantage_wins || 0} / ${levelState.required_wins}`;
     } else if (stage === 3) {
         elements.progressText.textContent = 'MỤC TIÊU: NULLBYTE Ω';
     } else {
@@ -444,7 +454,7 @@ function render() {
         renderInstructions(stage);
         elements.mapPrompt.textContent = stage === 1
             ? 'Bấm phím mũi tên để đi tìm ⚡ Pikachu.'
-            : (stage === 2 ? 'Khám phá Hệ và cân nhắc từng đối thủ trước khi vào battle.' : 'Đi tới ☠ NullByte Ω ở và chinh phục nó.');
+            : (stage === 2 ? 'Tìm hai Hộ vệ. Đấu sĩ phụ thưởng bình hồi phục.' : 'Đi tới ☠ NullByte Ω ở và chinh phục nó.');
         drawMap();
     } else if (gameState.defeat_message) {
         renderDefeat();
@@ -466,7 +476,9 @@ async function loadSave(file) {
         const response = await fetch(`${SAVE_URL}?action=load`, {method: 'POST', body: form});
         const payload = await response.json();
         if (payload.state) {
+            mapStage = 0;
             gameState = payload.state;
+            if (mapStage !== Number(gameState.stage) || gameState.defeat_message) mapStage = 0;
             render();
         }
         showToast(payload.message, !payload.ok);
@@ -500,7 +512,8 @@ document.addEventListener('keydown', (event) => {
     const keys = {ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right'};
     const activate = event.key === 'Enter' || event.key === ' ' || event.key === 'Spacebar' || event.code === 'Space';
     if (!gameState?.started || !elements.startOverlay.hidden) return;
-    if (busy) return;
+    if (busy || event.repeat) return;
+    if (activate && event.target.closest('button') && !combatButtons.includes(event.target.closest('button')) && ![elements.retryButton, elements.continueButton].includes(event.target.closest('button'))) return;
 
     if (gameState.defeat_message) {
         if (activate) {
@@ -527,7 +540,7 @@ document.addEventListener('keydown', (event) => {
             focusBattleAction(battleFocusIndex + 1);
         } else if (activate) {
             event.preventDefault();
-            [elements.fightButton, elements.runButton][battleFocusIndex].click();
+            combatButtons[battleFocusIndex].click();
         }
         return;
     }
@@ -538,27 +551,13 @@ document.addEventListener('keydown', (event) => {
     }
 });
 
-elements.fightButton.addEventListener('focus', () => {
-    battleFocusIndex = 0;
-});
-elements.runButton.addEventListener('focus', () => {
-    battleFocusIndex = 1;
-});
-elements.fightButton.addEventListener('click', async () => {
-    elements.battleResult.textContent = 'Đang tính toán damage...';
-    await postAction('battle_resolve');
-});
+combatButtons.forEach((button, index) => button.addEventListener('focus', () => { battleFocusIndex = index; }));
+for (const [index, move] of ['strike', 'guard', 'break', 'potion'].entries()) {
+    combatButtons[index].addEventListener('click', () => postAction('battle_resolve', {move}));
+}
 elements.runButton.addEventListener('click', () => postAction('battle_run'));
 elements.retryButton.addEventListener('click', () => postAction('dismiss_defeat'));
 elements.continueButton.addEventListener('click', () => postAction('advance_stage'));
-for (const button of [elements.retryButton, elements.continueButton]) {
-    button.addEventListener('keydown', (event) => {
-        if (event.key === 'Enter' || event.key === ' ' || event.code === 'Space') {
-            event.preventDefault();
-            button.click();
-        }
-    });
-}
 
 elements.saveButton.addEventListener('click', () => {
     if (!gameState?.started) return showToast('Hãy bắt đầu game trước.', true);

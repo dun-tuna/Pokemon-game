@@ -1,109 +1,67 @@
 # Cybermon: Pokemon Arena
 
-Game ba màn dành cho gian hàng CLB SRC. Game giữ lại kiểu chơi map/canvas của bản gốc: người chơi phải tự đi bằng phím mũi tên, chạm hotspot để gặp đối thủ, sau đó battle một đòn theo damage. Vị trí quái thường được xáo trộn ở mỗi lượt chơi; boss vẫn cố định.
+Bản Tactical / Endurance / Paradox (v12, font pixel rõ nét từ v11), dành cho gian hàng SRC. Giữ map pixel, nhạc, khám phá bằng phím mũi tên và giao diện hoài niệm. Các trận đấu giờ diễn ra theo lượt.
 
-## Cấu trúc ba màn
+## Ba màn chơi
 
-| Màn | Độ khó | Cách chơi | Điều kiện qua màn |
-| --- | --- | --- | --- |
-| 1 — Đồng Cỏ Khởi Động | Easy | Dùng ↑ ↓ ← → tìm 4 Wild Pikachu | Damage của bạn lớn hơn đối thủ trong cả 4 trận |
-| 2 — Counter | Medium | Tự đi tới 1 trong 7 hotspot và đọc type, damage, debuff | Chọn đối thủ có type yếu hơn starter để thắng và qua màn; cùng hệ phải thắng damage nhưng chưa qua, còn hệ counter sẽ làm thua |
-| 3 — Bosss | Hard | Đi tới NullByte Ω rồi chỉnh file Save/Load | Sửa trường `damage` lớn hơn `99.999` để vượt boss |
+| Màn | Luật mới | Điều kiện qua màn |
+| --- | --- | --- |
+| Đồng Cỏ Khởi Động | 6 Pikachu tăng dần HP/damage; đọc ý đồ và chọn Đánh / Thủ / Phá thủ; 3 bình hồi phục | Hạ cả 6 |
+| Counter | 2 hộ vệ và 5 đấu sĩ phụ; hộ vệ đổi hệ Fire → Water → Grass và tăng 4 damage sau mỗi lượt; 4 bình khởi đầu | Hạ cả 2 hộ vệ |
+| BOSS | NullByte ép HP và damage về 1 khi gặp và trước mỗi đòn | Tìm cách phá luật bằng save; chi tiết chỉ trong tài liệu ban tổ chức |
 
-Sau mỗi màn có màn hình **Chúc mừng!** và nút sang màn tiếp theo. Nút này tự nhận focus để người chơi bấm **Enter/Space**. Khi thua ở bất kỳ màn nào, game hiển thị banner lý do và nút **Thử lại từ Màn 1**; chỉ sau khi xác nhận mới quay về bản đồ. Sau khi thắng màn 3, victory flag mới xuất hiện.
+Đánh thắng Phá thủ; Phá thủ thắng Thủ; Thủ thắng Đánh. Đúng thế gây nhiều damage và nhận ít sát thương; Thủ đúng thế chặn hoàn toàn. Hòa thế vẫn trao đổi sát thương. Bất lợi thế gây ít damage và nhận đòn nặng.
 
-Save/Load luôn hiện diện trên thanh trên trong toàn bộ lượt chơi. File save giữ object Trainer cùng màn hiện tại và trạng thái chờ qua màn, nên nạp lại sẽ quay đúng màn đã lưu; trường `damage` vẫn là điểm deserialize có chủ đích để khai thác ở Màn 3.
+HP giữ nguyên giữa các trận; thắng được +3 damage. Hồi phục +45 HP (tối đa 100) tốn một lượt. Nếu đối thủ đang Thủ thì dùng bình không bị đánh trả. Đấu sĩ phụ Màn 2 thưởng thêm 1 bình khi bị hạ. Qua màn hồi đầy HP và cấp số bình của màn mới. Bỏ chạy không mất lượt hay HP, nhưng lần gặp lại đối thủ sẽ đầy HP và quay về trạng thái ban đầu.
 
-Game không có bảng hint tích hợp; ban tổ chức sẽ hỗ trợ trực tiếp khi người chơi bị kẹt.
+Màn 2 có lợi hệ nhân damage ×1,5, bất lợi ×0,65; sát thương nhận thay đổi ngược lại. Không có auto-lose chỉ vì gặp counter. Quái có vị trí ngẫu nhiên mỗi lượt chơi, boss cố định. Thua bất kỳ màn nào đều có banner và nút xác nhận chơi lại từ Màn 1.
 
-## Chạy nhanh
+## Điều khiển
 
-Yêu cầu: Docker Engine và Docker Compose plugin.
+- Trên map: ↑ ↓ ← → di chuyển, chạm đối thủ để vào battle.
+- Trong battle: ↑/← và ↓/→ chuyển qua 5 nút; Enter hoặc Space xác nhận. Chuột vẫn dùng được.
+- Nút chuyển màn / chơi lại: Enter hoặc Space.
+- Save/Load và nhạc ở thanh đầu trang. Save lưu màn, quái đã hạ, HP, bình, ý đồ và trận đang đánh. Vị trí đứng trên map được đặt về điểm xuất phát khi load.
+
+## Chạy bằng Docker
 
 ```bash
 cp .env.example .env
-nano .env
+```
+
+Đặt `SAVE_SECRET` trong `.env` bằng một chuỗi ngẫu nhiên dài ít nhất 32 ký tự. Có thể tạo bằng:
+
+```bash
+python3 -c 'import secrets; print(secrets.token_hex(32))'
+```
+
+Giữ khóa này ổn định để save dùng được sau restart/redeploy. Nếu để trống, game dùng khóa tạm trong `/tmp`; khi container bị tạo lại, save cũ có thể không còn hợp lệ. Nhiều instance phải dùng cùng khóa. Không đưa `.env` lên repo public.
+
+```bash
 docker compose up --build -d
-docker compose logs -f arena
+./smoke-test.sh http://localhost:15001
 ```
 
-Mở game tại `http://localhost:15001`. Nếu muốn các thiết bị cùng Wi-Fi truy cập, dùng IP LAN của máy tổ chức, ví dụ `http://192.168.1.20:15001`.
+Smoke test cần Python 3 trên máy chạy lệnh. Dùng session riêng và kiểm tra cả ba starter, trận nhiều lượt, save giữa battle, chuyển màn, boss, sửa checkpoint và puzzle mới.
 
-Sau khi container chạy, ban tổ chức có thể kiểm tra toàn bộ luồng bằng:
+Flag và title tùy biến được giữ từ bản trước. `FINAL_FLAG` trong cấu hình triển khai vẫn là nguồn flag. Bản này thay đổi luật và định dạng save: session cũ tự bắt đầu lại từ Màn 1; save các phiên bản trước v10 không tương thích.
+
+## Kiểm tra trước hội trại
+
+Chạy smoke test trên deployment Apache/Docker thật, sau đó cho người chơi thử để cân bằng thời lượng. Không thay key giữa sự kiện. Chỉ thư mục `public` được serve; `ORGANIZER-SOLUTION.md` và smoke test chứa lời giải, dành riêng cho ban tổ chức.
+
+## Định dạng save v12
+
+Toàn bộ `.sav` được bọc Base64, bao gồm object Trainer, kỹ năng và checkpoint đã ký. Game tự xử lý khi Save/Load; không thêm hint giải mã vào giao diện người chơi. Giới hạn upload 96 KB; dữ liệu sau giải mã tối đa 64 KB. Lời giải cập nhật nằm trong tài liệu ban tổ chức.
+
+Session và checkpoint v10/v11 vẫn giữ nguyên phiên bản nội bộ; không reset tiến trình chỉ vì cập nhật này. File save v10/v11 dạng object thô cần bọc Base64 toàn bộ trước khi Load; vẫn phải dùng cùng SAVE_SECRET. Không thay đổi khóa ký hay cơ chế phản đòn.
+
+## Cập nhật repo đã clone
+
+Dùng thư mục tạo bằng `git clone`, thư mục này tự có lịch sử Git; không cần `git init` cho mỗi bản cập nhật:
 
 ```bash
-./smoke-test.sh http://127.0.0.1:15001
+git pull --ff-only
 ```
 
-Dừng game:
-
-```bash
-docker compose down
-```
-
-Nếu Fedora đang bật firewalld:
-
-```bash
-sudo firewall-cmd --add-port=15001/tcp
-sudo firewall-cmd --runtime-to-permanent
-```
-
-## Đổi mã chiến thắng
-
-Sửa `.env` trước khi build/chạy:
-
-```dotenv
-PORT=15001
-FINAL_FLAG=SRC{W33lc0m3_t0_SRC_h4ck3r!!}
-```
-
-Sau đó áp dụng lại:
-
-```bash
-docker compose up -d --build --force-recreate
-```
-
-Không đưa `.env` hoặc `ORGANIZER-SOLUTION.md` cho người chơi.
-
-## Luồng dành cho người chơi
-
-1. Nhập tên và chọn starter.
-2. Dùng các phím mũi tên để đi đến từng biểu tượng trên map.
-3. Khi gặp quái, so sánh damage; chỉ cần một đòn.
-4. Ở Màn 2 có 7 đối thủ: type yếu hơn sẽ có debuff nhưng nếu thắng sẽ qua màn ngay; cùng hệ phải so damage và chỉ ghi nhận chiến thắng; hệ counter sẽ làm thua. Có thể **chạy** khỏi mọi trận để đổi đối thủ.
-5. Nếu thua, đọc banner lý do rồi bấm **Enter/Space** ở nút thử lại. Màn 3 vẫn phải đi tới boss; khi đã sẵn sàng, tải save, sửa trường `damage` lớn hơn `99.999` rồi nạp lại.
-6. Sau victory, đưa flag cho thành viên CLB.
-
-## Thiết kế an toàn cho hội trại
-
-Lỗ hổng ở Màn 3 là có chủ đích nhưng đã được giới hạn:
-
-- `unserialize()` chỉ cho phép class `Trainer`.
-- Không có magic method, lệnh hệ thống, truy cập file, database hoặc network trong object.
-- Khi load save ở Màn 1/2, damage được kẹp theo số trận đã thắng; chỉ Màn 3 mở một ngưỡng damage hữu hạn cho puzzle.
-- File upload tối đa 4 KB ở application và 8 KB ở PHP.
-- Container chạy filesystem read-only; chỉ `/tmp` dùng cho session/upload tạm.
-- PHP network primitives và các hàm thực thi process bị tắt.
-
-Vẫn nên chỉ chạy trên máy riêng cho sự kiện, đặt trong VLAN/Wi-Fi khách nếu có, không mount Docker socket, không mount thư mục host và không public port này ra Internet.
-
-## Reset toàn bộ session giữa hai ca
-
-Session nằm trong tmpfs của container. Khởi động lại sẽ xóa toàn bộ lượt chơi:
-
-```bash
-docker compose restart arena
-```
-
-## File quan trọng
-
-```text
-app/Trainer.php              Trainer và stats damage
-app/bootstrap.php            Session, encounter map và state helpers
-public/api/game.php          Di chuyển logic server-side, battle, progression
-public/api/save-load.php     Save/Load và điểm deserialize có chủ đích
-public/api/source.php        Endpoint cũ được vô hiệu hóa
-public/assets/game.js        Keyboard movement, map/canvas, battle UI
-public/assets/world.css      Giao diện map/battle/responsive
-ORGANIZER-SOLUTION.md        Lời giải, kiểm thử và hướng dẫn trợ giúp
-```
+Sau đó build lại game bằng `docker compose up --build -d` trong thư mục repo.
